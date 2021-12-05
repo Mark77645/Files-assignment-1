@@ -27,6 +27,8 @@ public:
 int main(){
     fstream Employee_File;
     fstream Department_File;
-    Employee_File.open("C:\\Users\\marks\\CLionProjects\\Files-assignment-1");
+    Employee_File.open(R"(C:\Users\marks\CLionProjects\Files-assignment-1\Employees)");
+    Department_File.open(R"(C:\Users\marks\CLionProjects\Files-assignment-1\Departments)");
+
     return 0;
 }
