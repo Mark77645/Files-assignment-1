@@ -14,7 +14,9 @@ public:
     char Employee_Name[50];
     char Employee_Position[50];
     char Dept_ID[30];
+    void addEmployee(Employee e){
 
+    }
 };
 
 class Department{
