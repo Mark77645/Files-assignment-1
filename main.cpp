@@ -2,9 +2,16 @@
 #include <fstream>
 #include <cstring>
 #include <algorithm>
-
+#include <sstream>
+#include <vector>
 using namespace std;
-static int byteOffset = 0;
+static int byteOffsetemp = 0;
+static int byteOffsetDep=0;
+static int counter=0;
+static vector<string> primary;
+static vector<string> secoundry;
+vector<int>primarysort;
+vector<int>secoundrysort;
 struct employee {
 
     char employee_ID[13];
@@ -48,18 +55,137 @@ struct SIndex {
         return strcmp(name, r.name) < 0;
     }
 };
+int binarySearch(int arr[], int p, int r, int num) {
+    if (p <= r) {
+        int mid = (p + r)/2;
+        if (arr[mid] == num)
+            return mid ;
+        if (arr[mid] > num)
+            return binarySearch(arr, p, mid-1, num);
+        if (arr[mid] < num)
+            return binarySearch(arr, mid+1, r, num);
+    }
+    return -1;
+}
+void sort_Primary(string filename){
+    fstream file;
+    int primaryKey;
+    file.open(filename,ios::in);
+    while (!file.eof()){
+        string s;
+        file>>s;
+        primary.push_back(s);
 
+    }
+    file.close();
+
+    file.open(filename,ios::in|ios::trunc);
+    file.close();
+
+    int size=primary.size();
+    for ( string  x : primary) {
+        stringstream geek(x);
+        geek>>primaryKey;
+        //بياخد اخر value  مرتين
+        if(size==1) {
+            break;
+        };
+        primarysort.push_back(primaryKey);
+        size--;
+    }
+    sort(primarysort.begin(),primarysort.end());
+
+    //sort the number of the primary
+    file.open(filename,ios::out|ios::trunc);
+    for (int i : primarysort) {
+        int j=0;//بيبرينت space فالتانيه
+        for (string x: primary) {
+
+            stringstream geek(x);
+            geek >> primaryKey;
+            if (i == primaryKey&&j==0) {
+                j++;
+                file<<x<<"\n";
+            }
+
+        }
+
+    }
+    file.close();
+    primary.clear();
+    primarysort.clear();
+};
+/*
+void sort_secoundry(string filename){
+    fstream file;
+    int primaryKey;
+    file.open(filename,ios::in);
+    while (!file.eof()){
+        string s;
+        file>>s;
+        secoundry.push_back(s);
+
+    }
+    file.close();
+
+    file.open(filename,ios::in|ios::trunc);
+    file.close();
+
+    int size=secoundry.size();
+    for ( string  x : secoundry) {
+        stringstream geek(x);
+        geek>>primaryKey;
+        //بياخد اخر value  مرتين
+        if(size==1) {
+            break;
+        };
+        secoundrysort.push_back(primaryKey);
+        size--;
+    }
+    sort(secoundrysort.begin(),secoundrysort.end());
+
+    //sort the number of the primary
+    file.open(filename,ios::out|ios::trunc);
+    for (int i : secoundrysort) {
+        int j=0;//بيبرينت space فالتانيه
+        for (string x: secoundry) {
+
+            stringstream geek(x);
+            geek >> primaryKey;
+            if (i == primaryKey&&j==0) {
+                j++;
+                file<<x<<"\n";
+            }
+
+        }
+
+    }
+    file.close();
+    secoundry.clear();
+    secoundrysort.clear();
+};*/
 void add_Primary(int byte ,string id, string fileName){
 
     fstream file;
     file.open(fileName,ios::app);
     file<<id<<'|'<<byte<<"\n";
-    sort(id);
-}
+    file.close();
+    sort_Primary(fileName);
+};
+void add_secoundry(int byte ,string name, string fileName){
+
+    fstream file;
+    file.open(fileName,ios::app);
+    file<<name<<'|'<<byte<<"\n";
+    file.close();
+    //sort_secoundry(fileName);
+
+};
 
 void add_employee() {
 
     fstream file;
+
     file.open("Employee_file.txt",ios::app);
     string input="|";
     employee e;
@@ -82,9 +208,11 @@ void add_employee() {
 
     file <<to_string(input.size())<<input<<'$' ;
     file.close();
+    add_Primary(byteOffsetemp, e.employee_ID, "PrimaryEmp.txt");
+    add_secoundry(byteOffsetemp, e.employee_name, "secoundryEmp.txt");
+    byteOffsetemp+=input.size()+3;
 
-    byteOffset+=input.size();
-    add_Primary(byteOffset, e.employee_ID, "PrimaryEmp.txt");
+
 
 }
 void add_Department() {
@@ -107,100 +235,229 @@ void add_Department() {
 
     file <<to_string(input.size())<<input<<'$' ;
     file.close();
+    add_Primary(byteOffsetDep, d.Dept_ID, "PrimaryDep.txt");
+    add_secoundry(byteOffsetDep, d.Dept_Name, "secoundryDep.txt");
+    byteOffsetDep+=input.size()+3;
 
-    byteOffset+=input.size();
-    add_Primary(byteOffset, d.Dept_ID, "PrimaryDep.txt");
 
 }
 
-void removeEmployee() {
+
+void remove_ll(int ID,string fileName,string filePrimary) {
     fstream file;
-    employee e;
-    string input;
-    file.open("Employee_file.txt", ios::app);
-    file.seekp(0, ios::beg);
-    cout << "pls enter the id of the employee : " << endl;
-    cin >> input;
-    if (input != e.employee_ID) {
-        file.put('*');
-        cout<<"recored of employee "<<input<<" is deleted"<<endl;
+    int primaryKey;
+    file.open(filePrimary,ios::in);
+
+    while (!file.eof()){
+        string s;
+        file>>s;
+        primary.push_back(s);
     }
-}
+    file.close();
 
+    int arr[primary.size()-1];
+    int size=primary.size();
+    int i=0;
 
-//void delete_employee(char employee_ID[13]) {}
+    for ( string  x : primary) {
+        stringstream geek(x);
+        geek>>primaryKey;
+        //بياخد اخر value  مرتين
+        if(size==1) {
+            break;
+        };
+        primarysort.push_back(primaryKey);
+        size--;
+    }
 
-void print_ID(char departmentID[13]) {
+    for (int j = 0; j <primarysort.size() ; ++j) {
+        arr[j]=primarysort[j];
 
-}
-
-void print(char employeeID[13]) {
-
-}
-
-void delete_department(char departmentID[30]) {
-
-}
-
-void print_de_ID(char departmentID[30]) {
-
-}
-
-void print_dp_NAME(char departmentName[50]) {
-
-}
-
-void makeQuery(string message) {
-    string temp = ""; //Carries the query itself.
-    char splitter = '=';
-    string temp2 = ""; //Carries the argument of the query.
-    for (int i = 0; i < (int) message.size(); i++) {
-        if (message[i] != splitter) {
-            temp += message[i];
-        } else if (message[i] == splitter) {
+    }
+    int var;
+    for (int j = 0; j < sizeof(arr) ; ++j) {
+        if(arr[j]==ID){
+            var=j;
             break;
         }
-        for (int j = 0; j < message.size(); i++) {
-            if (message[j] != splitter) {
-                continue;
-            } else if (message[j] == splitter) {
-                for (int k = j + 1; k < message.size(); k++) {
-                    temp2 += message[k];
-                }
-                break;
-            }
+    }
+    string s=primary[var];
+    int counter=0;
+    string input="";
+    for (int k = 0; k <s.size() ; ++k) {
+
+        if(s[k]=='|'){
+            counter++;
+            continue;
         }
-        temp2.erase(std::remove_if(temp2.begin(), temp2.end(), ::isspace), temp2.end()); //To remove whitespaces
-        string mess1 = "select all from Employee where Dept_ID";
-        string mess2 = "select all from Employee where Dept_ID";
-        string mess3 = "select Employee_Name from Employee where Employee";
-        if (temp == mess1) {
+        if(counter==1){
+            input+=s[k];
 
-        } else if (temp == mess2) {
-
-        } else if (temp == mess3) {
-
-        } else {
-            cout << "Please enter a valid query\n";
         }
     }
+    int byte=0;
+    string read;
+    stringstream geek(input);
+    geek>>byte;
+    file.open(fileName,ios::out);
+    file.seekp(byte+2,ios::beg);
+    file.put('*');
+    file.close();
 
+}
+
+void print_UsingID(int ID,string fileName,string filePrimary) {
+
+    fstream file;
+    int primaryKey;
+    file.open(filePrimary,ios::in);
+
+    while (!file.eof()){
+        string s;
+        file>>s;
+        primary.push_back(s);
+    }
+    file.close();
+
+    int arr[primary.size()-1];
+    int size=primary.size();
+    int i=0;
+
+    for ( string  x : primary) {
+        stringstream geek(x);
+        geek>>primaryKey;
+        //بياخد اخر value  مرتين
+        if(size==1) {
+            break;
+        };
+        primarysort.push_back(primaryKey);
+        size--;
+    }
+
+    for (int j = 0; j <primarysort.size() ; ++j) {
+        arr[j]=primarysort[j];
+
+    }
+    int var;
+    for (int j = 0; j < sizeof(arr) ; ++j) {
+        if(arr[j]==ID){
+            var=j;
+            break;
+        }
+    }
+    string s=primary[var];
+    int counter=0;
+    string input="";
+    for (int k = 0; k <s.size() ; ++k) {
+
+        if(s[k]=='|'){
+            counter++;
+            continue;
+        }
+        if(counter==1){
+            input+=s[k];
+
+        }
+    }
+    int byte=0;
+    string read;
+    stringstream geek(input);
+    geek>>byte;
+    file.open(fileName,ios::in);
+    file.seekg(byte,ios::beg);
+    while(getline(file,read,'$')){
+        cout<<read<<endl;
+        break;
+
+
+    }
+    primary.clear();
+    primarysort.clear();
 }
 
 int main() {
-    fstream Employee_file;
-    fstream Department_file;
-    fstream primary_INdx;
-    fstream Secondary_INdx;
-    Employee_file.open("Employee_file.txt", ios::app);
-    Department_file.open("Department_file.txt",ios::app);
-    primary_INdx.open("PrimaryEmp.txt",ios::app);
-    primary_INdx.open("PrimaryDep.txt",ios::app);
-    int n;
-    cin>>n;
-    for (int i = 0; i <n ; ++i) {
-        add_employee();
-        add_Department();
+    int choice;
+    do {
+        fstream Employee_file;
+        fstream Department_file;
+        fstream primary_INdx;
+        fstream Secondary_INdx;
+        Employee_file.open("Employee_file.txt", ios::app);
+        Department_file.open("Department_file.txt", ios::app);
+        primary_INdx.open("PrimaryEmp.txt", ios::app);
+        primary_INdx.open("PrimaryDep.txt", ios::app);
+        Secondary_INdx.open("secoundryEmp.txt", ios::app);
+        Secondary_INdx.open("secoundryDep.txt", ios::app);
+        cout << "1-Add New Employee\n";
+        cout << "2-Add New Department\n";
+        cout << "3-Delete Employee(ID)\n";
+        cout << "4-Delete Department(ID)\n";
+        cout << "5-print Employee(ID)\n";
+        cout << "6-print Employee(Dept_ID)\n";
+        cout << "7-print Department(ID)\n";
+        cout << "8-print Department(name)\n";
+        cout << "9-Write a Query\n";
+        cout << "10-Exit\n";
+        cout << "select choice:\n";
 
-    }//removeEmployee();
+        cin >>choice ;
+
+        if (choice == 1) {
+            add_employee();
+
+        }
+        else if (choice == 2) {
+            add_Department();
+        }
+        else if (choice == 3) {
+            int id;
+            cout<<"pls enter the id";
+            cin>>id;
+            remove_ll(id,"Employee_file.txt","PrimaryEmp.txt");
+
+        }
+        else if (choice == 4) {
+            int id;
+            cout<<"pls enter the id";
+            cin>>id;
+            remove_ll(id,"Department_file.txt","PrimaryDep.txt");
+
+        }
+        else if (choice == 5) {
+            int id;
+            cout<<"pls enter the id";
+            cin>>id;
+            print_UsingID(id,"Employee_file.txt","PrimaryEmp.txt");
+
+        }
+        else if (choice == 6) {
+
+        }
+        else if (choice == 7) {
+            int id;
+            cout<<"pls enter the id";
+            cin>>id;
+            print_UsingID(id,"Department_file.txt","PrimaryDep.txt");
+
+        }
+        else if (choice == 8) {
+
+        }
+        else if (choice == 9) {
+
+        }else if (choice==10){
+            cout << "Exit" << endl;
+            Employee_file.close();
+            Department_file.close();
+            primary_INdx.close();
+            Secondary_INdx.close();
+            return 0;
+        }
+        else{
+            cout<<"write correct Number"<<endl;
+        }
+
+
+    } while (true);
+
 }
